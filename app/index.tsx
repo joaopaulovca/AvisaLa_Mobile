@@ -15,6 +15,9 @@ import axios from 'axios';
 import { Post } from './types/Post';
 import { BookOpen, Filter, Search, X } from 'lucide-react-native';
 import { Picker } from '@react-native-picker/picker';
+import { RootStackParamList } from './types/types';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import { useLocalSearchParams } from 'expo-router';
 
 const BLUE_500 = '#3b82f6';
 const WHITE = '#ffffff';
@@ -24,7 +27,7 @@ const Categorias = [
   "Química", "Física", "Biologia"
 ];
 
-export default function Index() {
+export default function index() {
   const [data, setData] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -94,6 +97,8 @@ export default function Index() {
       }
     };
   };
+
+  const { id, nome, isAdmin, tipo } = useLocalSearchParams();
 
   // Componente que renderiza cada linha da lista
   const renderItem = ({ item }: { item: Post }) => (

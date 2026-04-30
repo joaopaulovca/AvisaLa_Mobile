@@ -11,18 +11,42 @@ import {
   StatusBar
 } from 'react-native';
 import { Eye, EyeOff, User, Lock } from 'lucide-react-native';
+import axios from 'axios';
+import { useRouter } from 'expo-router'; // Use este hook!
+import { RootStackParamList } from './types/types';
 
-const BLUE_900 = '#1e3a8a';
+const BLUE_900 = '#3b82f6';
 const WHITE = '#ffffff';
 
 const LoginScreen = () => {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [secureText, setSecureText] = useState(true);
 
-  const handleLogin = () => {
-    console.log('Login com:', email, password);
-    // Lógica de autenticação aqui
+  const router = useRouter();
+
+const handleLogin = async () => {
+    let Uri = 'http://192.168.15.106:3000/users/loginUsuario';
+    const dadosLogin = { username: email, password: password };
+
+    try {
+      const response = await axios.post(Uri, dadosLogin);
+
+      if (response.status === 200 || response.status === 201) {
+        // ✅ Navegação no Expo Router com parâmetros
+        router.push({
+          pathname: "/", // ou apenas "/", já que index é a rota raiz
+          params: { 
+            id: response.data.id, 
+            nome: response.data.name,
+            tipoUsuario: String(response.data.role) // O Expo Router prefere strings nos params
+          }
+        });
+      }
+    } catch (error) {
+      console.log('error', error);
+    }
   };
 
   return (
@@ -33,7 +57,7 @@ const LoginScreen = () => {
         style={styles.content}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Bem-vindo</Text>
+          <Text style={styles.title}>Bem-vindo ao AvisaLá !</Text>
           <Text style={styles.subtitle}>Faça login para continuar</Text>
         </View>
 
@@ -107,7 +131,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   title: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: 'bold',
     color: BLUE_900,
   },
