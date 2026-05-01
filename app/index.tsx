@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -13,11 +13,11 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { Post } from './types/Post';
-import { BookOpen, Filter, Search, X } from 'lucide-react-native';
+import { BookOpen, Filter, Pencil, Plus, Search, X } from 'lucide-react-native';
 import { Picker } from '@react-native-picker/picker';
 import { RootStackParamList } from './types/types';
 import { RouteProp, useRoute } from '@react-navigation/native';
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
 const BLUE_500 = '#3b82f6';
 const WHITE = '#ffffff';
@@ -34,8 +34,10 @@ export default function index() {
   const [originalData, setOriginalData] = useState<Post[]>([]);
   const [filteredData, setFilteredData] = useState<Post[]>([]);
 
-  const [selectedCategoria, setSelectedCategoria] = useState('Todos');
+  const [selectedCategoria, setSelectedCategoria] = useState('Todas as Disciplinas');
   const [searchConteudo, setSearchConteudo] = useState('');
+
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -50,6 +52,12 @@ export default function index() {
     });
     //setFilteredData(filtered);
   }, [selectedCategoria, searchConteudo, originalData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      handleFilter();
+    }, [])
+  );
 
   const fetchData = async () => {
     try {
@@ -69,6 +77,7 @@ export default function index() {
     Keyboard.dismiss(); // Fecha o teclado
     
     let Uri = '';
+    console.log('selectedCategoria', selectedCategoria);
     switch (selectedCategoria) {
       case 'Todas as Disciplinas':
         Uri = 'http://192.168.15.106:3000/posts';
@@ -80,44 +89,69 @@ export default function index() {
     };
 
     if (searchConteudo.length > 1) {
-      Uri += `topic/${searchConteudo}/description/${searchConteudo}`;                       
+      Uri += `/topic/${searchConteudo}/description/${searchConteudo}`;                       
     };
 
     try {
+      console.log('uri', Uri)
       const response = await axios.get<Post[]>(Uri); 
       setData(response.data);
       setFilteredData(response.data);  // Atualiza state do componente pagePai
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        console.log(err.message);
-        console.log(Uri);
+
       } else {
-        console.log("Erro ao buscar os dados");
-        console.log(Uri);
+
       }
     };
   };
 
-  const { id, nome, isAdmin, tipo } = useLocalSearchParams();
+  const { id, nome, tipoUsuario } = useLocalSearchParams();
+
+  const router = useRouter();
 
   // Componente que renderiza cada linha da lista
   const renderItem = ({ item }: { item: Post }) => (
-    <View style={styles.card}>
-      <View style={styles.categoryBadge}>
-        <Text style={styles.categoryText}>{item.category.toUpperCase()}</Text>
-      </View>
+    <TouchableOpacity 
+      style={styles.card} 
+      onPress={() => {setExpandedId(item.id)}} 
+    >
+        <View style={styles.categoryBadge}>
+          <Text style={styles.categoryText}>{item.category.toUpperCase()}</Text>
+        </View>
+
+        {(tipoUsuario !== 'Estudante') && 
+         (id === item.user_id) &&
+        <TouchableOpacity 
+          style={styles.editButton} 
+          onPress={() => {            
+            router.push({
+              pathname: "/CadastroScreen", // ou apenas "/", já que index é a rota raiz
+              params: { 
+                userId: item.User?.id,
+                id: item.id,
+                category: item.category,
+                topic: item.topic,
+                description: item.description
+              }
+            }); 
+          }}
+        >
+          <Pencil color={BLUE_500} size={20} />
+        </TouchableOpacity>}
       
-      <Text style={styles.title}>{item.topic}</Text>
+        <Text style={styles.title}>{item.topic}</Text>
       
-      <View style={styles.professorContainer}>
-        <Text style={styles.label}>Professor:</Text>
-        <Text style={styles.professorName}>{item.User?.name}</Text>
-      </View>
+        <View style={styles.professorContainer}>
+          <Text style={styles.label}>Professor:</Text>
+          <Text style={styles.professorName}>{item.User?.name}</Text>
+        </View>
       
-      <Text style={styles.contentText} numberOfLines={1}>
-        {item.description}
-      </Text>
-    </View>
+        <Text style={styles.contentText} numberOfLines={expandedId === item.id ? undefined : 1} >
+          {item.description}
+        </Text>
+      
+    </TouchableOpacity>
   );
 
   if (loading) {
@@ -129,7 +163,32 @@ export default function index() {
   }
 
 return (
+  
     <SafeAreaView style={styles.container}>
+      <Stack.Screen 
+        options={{ 
+          title: 'AvisaLá!',
+          headerRight: () => (
+            (tipoUsuario !== 'Estudante') && <TouchableOpacity 
+              onPress={() => {                
+                // Passando dados para a CadastroScreen
+                router.push({
+                  pathname: "/CadastroScreen",
+                  params: { 
+                    userId: id,
+                    id: '',
+                    category: '',
+                    topic: '',
+                    description: ''
+                  }
+                });
+              }}
+            >
+              <Plus color="#3b82f6" size={24} style={{ marginRight: 15 }} />
+            </TouchableOpacity>
+          ),
+        }} 
+      />
       <View style={styles.searchPanel}>
         
         {/* Select de Categoria */}
@@ -340,4 +399,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   filterButtonText: { color: WHITE, fontWeight: 'bold', fontSize: 14, letterSpacing: 1 },
+  editButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    padding: 8,
+    backgroundColor: '#eff6ff', // Fundo azul bem clarinho
+    borderRadius: 8,
+  }
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Eye, EyeOff, User, Lock } from 'lucide-react-native';
 import axios from 'axios';
-import { useRouter } from 'expo-router'; // Use este hook!
+import { useFocusEffect, useRouter } from 'expo-router'; // Use este hook!
 import { RootStackParamList } from './types/types';
 
 const BLUE_900 = '#3b82f6';
@@ -26,7 +26,14 @@ const LoginScreen = () => {
 
   const router = useRouter();
 
-const handleLogin = async () => {
+  useFocusEffect(
+    useCallback(() => {
+      setEmail('')
+      setPassword('')      
+    }, [])
+  );
+
+  const handleLogin = async () => {
     let Uri = 'http://192.168.15.106:3000/users/loginUsuario';
     const dadosLogin = { username: email, password: password };
 
