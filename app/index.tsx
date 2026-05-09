@@ -9,15 +9,18 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
-  Keyboard
+  Keyboard,
+  Modal,
+  TouchableWithoutFeedback
 } from 'react-native';
 import axios from 'axios';
 import { Post } from './types/Post';
-import { BookOpen, Filter, Pencil, Plus, Search, X } from 'lucide-react-native';
+import { BookOpen, ChevronDown, Filter, LogOut, Pencil, Plus, Search, User, X } from 'lucide-react-native';
 import { Picker } from '@react-native-picker/picker';
 import { RootStackParamList } from './types/types';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Menu, Divider, Provider } from 'react-native-paper';
 
 const BLUE_500 = '#3b82f6';
 const WHITE = '#ffffff';
@@ -38,6 +41,24 @@ export default function index() {
   const [searchConteudo, setSearchConteudo] = useState('');
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const [visible, setVisible] = useState(false);
+
+  const openMenu = () => setVisible(true);
+  const closeMenu = () => setVisible(false);
+
+  const router = useRouter();
+
+  const handleLogout = () => {
+    closeMenu();
+    // Lógica para limpar token/sessão
+    router.replace('/LoginScreen'); 
+  };
+
+  const handleGoToProfile = () => {
+    closeMenu();
+    router.push('/LoginScreen');
+  };  
 
   useEffect(() => {
     fetchData();
@@ -108,7 +129,8 @@ export default function index() {
 
   const { id, nome, tipoUsuario } = useLocalSearchParams();
 
-  const router = useRouter();
+  const [userName] = useState(nome); // Nome que viria do login
+  const [menuVisible, setMenuVisible] = useState(false);  
 
   // Componente que renderiza cada linha da lista
   const renderItem = ({ item }: { item: Post }) => (
@@ -163,88 +185,136 @@ export default function index() {
   }
 
 return (
-  
-    <SafeAreaView style={styles.container}>
-      <Stack.Screen 
-        options={{ 
-          title: 'AvisaLá!',
-          headerRight: () => (
-            (tipoUsuario !== 'Estudante') && <TouchableOpacity 
-              onPress={() => {                
-                // Passando dados para a CadastroScreen
-                router.push({
-                  pathname: "/CadastroScreen",
-                  params: { 
-                    userId: id,
-                    id: '',
-                    category: '',
-                    topic: '',
-                    description: ''
-                  }
-                });
-              }}
-            >
-              <Plus color="#3b82f6" size={24} style={{ marginRight: 15 }} />
-            </TouchableOpacity>
-          ),
-        }} 
-      />
-      <View style={styles.searchPanel}>
-        
-        {/* Select de Categoria */}
-        <View style={styles.pickerWrapper}>
-          <BookOpen color={BLUE_500} size={18} style={styles.icon} />
-          <Picker
-            selectedValue={selectedCategoria}
-            onValueChange={(itemValue: React.SetStateAction<string>) => setSelectedCategoria(itemValue)}
-            style={styles.picker}
-            dropdownIconColor={BLUE_500}
-          >
-            {Categorias.map((cat) => (
-              <Picker.Item key={cat} label={cat} value={cat} color="#1e293b" />
-            ))}
-          </Picker>
-        </View>
+    <Provider>
+      <SafeAreaView style={styles.container}>
+        <Stack.Screen 
+          options={{ 
+            title: 'AvisaLá!',
+            headerRight: () => (
+              (tipoUsuario !== 'Estudante') && <TouchableOpacity 
+                onPress={() => {                
+                  // Passando dados para a CadastroScreen
+                  router.push({
+                    pathname: "/CadastroScreen",
+                    params: { 
+                      userId: id,
+                      id: '',
+                      category: '',
+                      topic: '',
+                      description: ''
+                    }
+                  });
+                }}
+              >
+                <Plus color="#3b82f6" size={24} style={{ marginRight: 15 }} />
+              </TouchableOpacity>
+            ),
+            headerBackVisible: false,
+            headerLeft: () => (
+            <View>
+              <TouchableOpacity 
+                onPress={() => setMenuVisible(true)} 
+                style={styles.menuAnchor}
+              >
+                <User color={BLUE_500} size={20} />
+                <ChevronDown color={BLUE_500} size={16} />
+              </TouchableOpacity>
 
-        {/* Input Conteúdo */}
-        <View style={styles.inputWrapper}>
-          <Filter color={BLUE_500} size={18} style={styles.searchIcon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Palavra-chave no conteúdo"
-            value={searchConteudo}
-            onChangeText={setSearchConteudo}
-            placeholderTextColor="#94a3b8"
-          />
-          {searchConteudo !== '' && (
-            <TouchableOpacity onPress={() => setSearchConteudo('')}>
-              <X color="#94a3b8" size={18} />
-            </TouchableOpacity>
-          )}
-        </View>
-        {/* Botão de Filtrar */}
-        <TouchableOpacity style={styles.filterButton} onPress={handleFilter}>
-          <Filter color={WHITE} size={20} style={{ marginRight: 8 }} />
-          <Text style={styles.filterButtonText}>APLICAR FILTROS</Text>
-        </TouchableOpacity>
-      </View>
+              {/* Modal de Menu Customizado */}
+              <Modal
+                visible={menuVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setMenuVisible(false)}
+              >
+                <TouchableWithoutFeedback onPress={() => setMenuVisible(false)}>
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.dropdownMenu}>
 
-      {loading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={BLUE_500} />
-        </View>
-      ) : (
-        <FlatList
-          data={filteredData}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>Nenhuma aula encontrada para esses filtros.</Text>
-          }
+                      <TouchableOpacity style={styles.menuItem}>
+                        <View style={styles.avatar}>
+                          <Text style={styles.avatarText}>{userName.charAt(0)}</Text>
+                        </View>
+                        <Text style={styles.userNameText}>{userName}</Text>
+                      </TouchableOpacity>                      
+                      
+                      <TouchableOpacity style={styles.menuItem} onPress={() => setMenuVisible(false)}>
+                        <User color="#475569" size={20} />
+                        <Text style={styles.menuItemText}>Perfil do Usuário</Text>
+                      </TouchableOpacity>
+
+                      <View style={styles.divider} />
+
+                      <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+                        <LogOut color="#ef4444" size={20} />
+                        <Text style={[styles.menuItemText, { color: '#ef4444' }]}>Sair</Text>
+                      </TouchableOpacity>
+
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
+              </Modal>
+            </View> 
+            )         
+          }} 
         />
-      )}
-    </SafeAreaView>
+        <View style={styles.searchPanel}>
+          
+          {/* Select de Categoria */}
+          <View style={styles.pickerWrapper}>
+            <BookOpen color={BLUE_500} size={18} style={styles.icon} />
+            <Picker
+              selectedValue={selectedCategoria}
+              onValueChange={(itemValue: React.SetStateAction<string>) => setSelectedCategoria(itemValue)}
+              style={styles.picker}
+              dropdownIconColor={BLUE_500}
+            >
+              {Categorias.map((cat) => (
+                <Picker.Item key={cat} label={cat} value={cat} color="#1e293b" />
+              ))}
+            </Picker>
+          </View>
+
+          {/* Input Conteúdo */}
+          <View style={styles.inputWrapper}>
+            <Filter color={BLUE_500} size={18} style={styles.searchIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Palavra-chave no conteúdo"
+              value={searchConteudo}
+              onChangeText={setSearchConteudo}
+              placeholderTextColor="#94a3b8"
+            />
+            {searchConteudo !== '' && (
+              <TouchableOpacity onPress={() => setSearchConteudo('')}>
+                <X color="#94a3b8" size={18} />
+              </TouchableOpacity>
+            )}
+          </View>
+          {/* Botão de Filtrar */}
+          <TouchableOpacity style={styles.filterButton} onPress={handleFilter}>
+            <Filter color={WHITE} size={20} style={{ marginRight: 8 }} />
+            <Text style={styles.filterButtonText}>APLICAR FILTROS</Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading ? (
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={BLUE_500} />
+          </View>
+        ) : (
+          <FlatList
+            data={filteredData}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>Nenhuma aula encontrada para esses filtros.</Text>
+            }
+          />
+        )}
+      </SafeAreaView>
+    </Provider>
   );
 };
 
@@ -406,5 +476,63 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: '#eff6ff', // Fundo azul bem clarinho
     borderRadius: 8,
-  }
+  },
+menuAnchor: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 15,
+    gap: 8,
+  },
+  avatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: BLUE_500,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    color: WHITE,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  userNameText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.1)', // Fundo levemente escurecido
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 60, // Ajuste conforme a altura do seu Header
+    left: 15,
+    backgroundColor: WHITE,
+    borderRadius: 12,
+    padding: 8,
+    width: 200,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    gap: 10,
+  },
+  menuItemText: {
+    fontSize: 15,
+    color: '#334155',
+    fontWeight: '500',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#f1f5f9',
+    marginVertical: 4,
+  } 
 });
