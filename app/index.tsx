@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { Post } from './types/Post';
-import { BookOpen, ChevronDown, Filter, LogOut, Pencil, Plus, Search, User, X } from 'lucide-react-native';
+import { BookOpen, ChevronDown, Filter, LogOut, MenuIcon, Pencil, Plus, Search, User, UsersIcon, X } from 'lucide-react-native';
 import { Picker } from '@react-native-picker/picker';
 import { RootStackParamList } from './types/types';
 import { RouteProp, useRoute } from '@react-navigation/native';
@@ -54,6 +54,20 @@ export default function index() {
     // Lógica para limpar token/sessão
     router.replace('/LoginScreen'); 
   };
+
+  const handleListProfessor = () => {
+    router.push({
+      pathname: "./UserListScreen",
+      params: { tipo: 'Professor' } // Passando o tipo aqui
+    });
+  }
+
+  const handleListEstudante = () => {
+    router.push({
+      pathname: "./UserListScreen",
+      params: { tipo: 'Estudante' } // Passando o tipo aqui
+    });
+  }  
 
   const handleGoToProfile = () => {
     closeMenu();
@@ -216,8 +230,7 @@ return (
                 onPress={() => setMenuVisible(true)} 
                 style={styles.menuAnchor}
               >
-                <User color={BLUE_500} size={20} />
-                <ChevronDown color={BLUE_500} size={16} />
+                <MenuIcon color={BLUE_500} size={20} />
               </TouchableOpacity>
 
               {/* Modal de Menu Customizado */}
@@ -233,15 +246,27 @@ return (
 
                       <TouchableOpacity style={styles.menuItem}>
                         <View style={styles.avatar}>
-                          <Text style={styles.avatarText}>{userName.charAt(0)}</Text>
+                          <Text style={styles.avatarText}>{String(userName).charAt(0)}</Text>
                         </View>
                         <Text style={styles.userNameText}>{userName}</Text>
-                      </TouchableOpacity>                      
+                      </TouchableOpacity>  
+
+                      <View style={styles.divider} />                                          
                       
                       <TouchableOpacity style={styles.menuItem} onPress={() => setMenuVisible(false)}>
                         <User color="#475569" size={20} />
                         <Text style={styles.menuItemText}>Perfil do Usuário</Text>
                       </TouchableOpacity>
+
+                      <TouchableOpacity style={styles.menuItem} onPress={handleListProfessor}>
+                        <UsersIcon color="#475569" size={20} />
+                        <Text style={styles.menuItemText}>Lista de Professores</Text>
+                      </TouchableOpacity>   
+
+                      <TouchableOpacity style={styles.menuItem} onPress={handleListEstudante}>
+                        <UsersIcon color="#475569" size={20} />
+                        <Text style={styles.menuItemText}>Lista de Alunos</Text>
+                      </TouchableOpacity>                                           
 
                       <View style={styles.divider} />
 
