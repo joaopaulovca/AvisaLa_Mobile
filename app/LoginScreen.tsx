@@ -11,7 +11,7 @@ import {
   StatusBar
 } from 'react-native';
 import { Eye, EyeOff, User, Lock } from 'lucide-react-native';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useFocusEffect, useRouter } from 'expo-router'; // Use este hook!
 import { RootStackParamList } from './types/types';
 
@@ -51,10 +51,20 @@ const LoginScreen = () => {
           }
         });
       }
+
     } catch (error) {
-      console.log('error', error);
+      alert('Usuário não encontrado !');
     }
   };
+
+  const handleUsuarioScreen = () => {
+    router.push({
+      pathname: '/UsuarioScreen', // ou apenas "/", já que index é a rota raiz
+      params: { 
+
+      }
+    });    
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -103,10 +113,6 @@ const LoginScreen = () => {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
-          </TouchableOpacity>
-
           {/* Botão de Login */}
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>Entrar</Text>
@@ -115,7 +121,7 @@ const LoginScreen = () => {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Não tem uma conta? </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleUsuarioScreen}>
             <Text style={styles.signUpText}>Cadastre-se</Text>
           </TouchableOpacity>
         </View>

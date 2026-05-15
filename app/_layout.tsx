@@ -21,6 +21,7 @@ export default function RootLayout() {
       <Stack.Screen name="index" options={{ title: '' }} />
       <Stack.Screen name="CadastroScreen" options={{ title: '' }} />
       <Stack.Screen name="UserListScreen" options={{ title: '' }} />
+      <Stack.Screen name="UsuarioScreen" options={{ title: 'Cadastro de Usuário' }} />
     </Stack>
   );
 }

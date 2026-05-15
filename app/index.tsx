@@ -57,21 +57,24 @@ export default function index() {
 
   const handleListProfessor = () => {
     router.push({
-      pathname: "./UserListScreen",
+      pathname: '/UserListScreen',
       params: { tipo: 'Professor' } // Passando o tipo aqui
     });
   }
 
   const handleListEstudante = () => {
     router.push({
-      pathname: "./UserListScreen",
-      params: { tipo: 'Estudante' } // Passando o tipo aqui
+      pathname: '/UserListScreen',
+      params: { tipo: 'Estudante', idUsuarioLogado: id, roleUsuarioLogado: tipoUsuario } // Passando o tipo aqui
     });
   }  
 
   const handleGoToProfile = () => {
     closeMenu();
-    router.push('/LoginScreen');
+    router.push({
+      pathname: '/UsuarioScreen',
+      params: { roleUsuarioLogado: tipoUsuario, idUsuarioLogado: id, id: id }
+    });
   };  
 
   useEffect(() => {
@@ -112,7 +115,6 @@ export default function index() {
     Keyboard.dismiss(); // Fecha o teclado
     
     let Uri = '';
-    console.log('selectedCategoria', selectedCategoria);
     switch (selectedCategoria) {
       case 'Todas as Disciplinas':
         Uri = 'http://192.168.15.106:3000/posts';
@@ -253,20 +255,20 @@ return (
 
                       <View style={styles.divider} />                                          
                       
-                      <TouchableOpacity style={styles.menuItem} onPress={() => setMenuVisible(false)}>
+                      <TouchableOpacity style={styles.menuItem} onPress={handleGoToProfile}>
                         <User color="#475569" size={20} />
                         <Text style={styles.menuItemText}>Perfil do Usuário</Text>
                       </TouchableOpacity>
 
-                      <TouchableOpacity style={styles.menuItem} onPress={handleListProfessor}>
+                      {tipoUsuario === 'Admin' && <TouchableOpacity style={styles.menuItem} onPress={handleListProfessor}>
                         <UsersIcon color="#475569" size={20} />
                         <Text style={styles.menuItemText}>Lista de Professores</Text>
-                      </TouchableOpacity>   
+                      </TouchableOpacity>}
 
-                      <TouchableOpacity style={styles.menuItem} onPress={handleListEstudante}>
+                      {tipoUsuario === 'Admin' && <TouchableOpacity style={styles.menuItem} onPress={handleListEstudante}>
                         <UsersIcon color="#475569" size={20} />
                         <Text style={styles.menuItemText}>Lista de Alunos</Text>
-                      </TouchableOpacity>                                           
+                      </TouchableOpacity>}                               
 
                       <View style={styles.divider} />
 

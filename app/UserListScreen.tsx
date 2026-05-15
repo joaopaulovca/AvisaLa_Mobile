@@ -22,7 +22,7 @@ const UserListScreen = () => {
   const [users, setUsers] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { tipo } = useLocalSearchParams();
+  const { tipo, idUsuarioLogado, roleUsuarioLogado } = useLocalSearchParams();
 
   useEffect(() => {
     fetchUsers();
@@ -41,8 +41,8 @@ const UserListScreen = () => {
 
   const handleEdit = (user: UserType) => {
     router.push({
-      pathname: "/",
-      params: { ...user }
+      pathname: '/UsuarioScreen',
+      params: { roleUsuarioLogado: roleUsuarioLogado, idUsuarioLogado: idUsuarioLogado, id: user.id }
     });
   };
 
@@ -98,13 +98,20 @@ const UserListScreen = () => {
     </View>
   );
 
+  const handleNovoUsuario = () => {
+    router.push({
+      pathname: '/UsuarioScreen', // ou apenas "/", já que index é a rota raiz
+      params: { roleUsuarioLogado: roleUsuarioLogado, idUsuarioLogado: idUsuarioLogado, id: '' }
+    });    
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{tipo === 'Professor' ?  'Professores' : tipo + 's'}</Text>
         <TouchableOpacity 
           style={styles.addButton}
-          onPress={() => router.push('/')}
+          onPress={handleNovoUsuario}
         >
           <UserPlus color={WHITE} size={20} />
         </TouchableOpacity>
