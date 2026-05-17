@@ -42,6 +42,7 @@ export default function index() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const [visible, setVisible] = useState(false);
+  const [apenasMeusPosts, setApenasMeusPosts] = useState(false);
 
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
@@ -111,8 +112,8 @@ export default function index() {
   const handleFilter = async () => {
     Keyboard.dismiss(); // Fecha o teclado
 
-    try {
-      const data = await dataService.filterPosts(selectedCategoria, searchConteudo); 
+    try {      
+      const data = await dataService.filterPosts(selectedCategoria, searchConteudo, String(apenasMeusPosts ? id : '')); 
       setData(data);
       setFilteredData(data);
     } catch (err) {
@@ -140,14 +141,14 @@ export default function index() {
   const renderItem = ({ item }: { item: Post }) => (
     <TouchableOpacity 
       style={styles.card} 
-      onPress={() => {setExpandedId(item.id)}} 
+      onPress={() => {setExpandedId(item.id)}}       
     >
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryText}>{item.category.toUpperCase()}</Text>
         </View>
 
         {(tipoUsuario !== 'Estudante') && 
-         (id === item.user_id) &&
+         ((id === item.user_id) || (tipoUsuario === 'Admin')) &&
         <TouchableOpacity 
           style={styles.editButton} 
           onPress={() => {            
@@ -260,10 +261,30 @@ return (
 
                       <View style={styles.divider} />
 
+                      <View style={styles.menuContainer}>
+                        
+                        <TouchableOpacity 
+                          style={styles.checkboxContainer} 
+                          onPress={() => setApenasMeusPosts(!apenasMeusPosts)} 
+                          activeOpacity={0.7}
+                        >
+                          <View style={[
+                            styles.checkbox, 
+                            apenasMeusPosts && styles.checkboxChecked
+                          ]}>
+                            {apenasMeusPosts && <Text style={styles.checkboxCheckmark}>✓</Text>}
+                          </View>
+                          
+                          <Text style={styles.checkboxLabel}>Mostrar apenas meus posts</Text>
+                        </TouchableOpacity>
+                      </View>                       
+
+                      <View style={styles.divider} />
+
                       <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
                         <LogOut color="#ef4444" size={20} />
                         <Text style={[styles.menuItemText, { color: '#ef4444' }]}>Sair</Text>
-                      </TouchableOpacity>
+                      </TouchableOpacity>                     
 
                     </View>
                   </View>
@@ -492,7 +513,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#eff6ff', // Fundo azul bem clarinho
     borderRadius: 8,
   },
-menuAnchor: {
+  menuAnchor: {
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 15,
@@ -527,7 +548,7 @@ menuAnchor: {
     backgroundColor: WHITE,
     borderRadius: 12,
     padding: 8,
-    width: 200,
+    width: 300,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -549,5 +570,48 @@ menuAnchor: {
     height: 1,
     backgroundColor: '#f1f5f9',
     marginVertical: 4,
-  } 
+  },
+checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#3b82f6',
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  checkboxChecked: {
+    backgroundColor: '#3b82f6',
+  },
+  checkboxCheckmark: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    color: '#1e293b',
+    fontWeight: '500',
+  },   
+  menuContainer: {
+    paddingLeft: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderColor: '#e2e8f0'
+  },
+  menuTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748b',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },  
 });

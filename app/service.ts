@@ -76,19 +76,15 @@ export const dataService = {
     return await api.get<Post[]>('posts');
   },
 
-  filterPosts: async (selectedCategoria: String, searchConteudo: String) => {
+  filterPosts: async (selectedCategoria: String, searchConteudo: String, user_id: String = '') => {
 
-    let complementoUri = '';
+    let complementoUri = 'posts';
 
-    switch (selectedCategoria) {
-      case 'Todas as Disciplinas':
-        complementoUri = 'posts';
-        break;
+    if (user_id)
+      complementoUri += `/prof/${user_id}` 
 
-      default:
-        complementoUri = `posts/category/${selectedCategoria}`;
-        break;
-    };
+    if ((selectedCategoria) && (selectedCategoria !== 'Todas as Disciplinas'))
+      complementoUri += `/category/${selectedCategoria}`;
 
     if (searchConteudo.length > 1) {
       complementoUri += `/topic/${searchConteudo}/description/${searchConteudo}`;                       
