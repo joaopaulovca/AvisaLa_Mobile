@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { Post } from './types/Post';
-import { BookOpen, Filter, LogOut, MenuIcon, Pencil, Plus, User, UsersIcon, X } from 'lucide-react-native';
+import { BookOpen, ChevronDown, Filter, LogOut, MenuIcon, Pencil, Plus, User, UsersIcon, X } from 'lucide-react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Provider } from 'react-native-paper';
@@ -43,6 +43,7 @@ export default function index() {
 
   const [visible, setVisible] = useState(false);
   const [apenasMeusPosts, setApenasMeusPosts] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false)
 
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
@@ -116,6 +117,7 @@ export default function index() {
       const data = await dataService.filterPosts(selectedCategoria, searchConteudo, String(apenasMeusPosts ? id : '')); 
       setData(data);
       setFilteredData(data);
+      setFilterVisible(false);
     } catch (err) {
       if (axios.isAxiosError(err)) {
 
@@ -242,24 +244,7 @@ return (
                         <Text style={styles.userNameText}>{userName}</Text>
                       </TouchableOpacity>  
 
-                      <View style={styles.divider} />                                          
-                      
-                      <TouchableOpacity style={styles.menuItem} onPress={handleGoToProfile}>
-                        <User color="#475569" size={20} />
-                        <Text style={styles.menuItemText}>Perfil do Usuário</Text>
-                      </TouchableOpacity>
-
-                      {tipoUsuario === 'Admin' && <TouchableOpacity style={styles.menuItem} onPress={handleListProfessor}>
-                        <UsersIcon color="#475569" size={20} />
-                        <Text style={styles.menuItemText}>Lista de Professores</Text>
-                      </TouchableOpacity>}
-
-                      {tipoUsuario === 'Admin' && <TouchableOpacity style={styles.menuItem} onPress={handleListEstudante}>
-                        <UsersIcon color="#475569" size={20} />
-                        <Text style={styles.menuItemText}>Lista de Alunos</Text>
-                      </TouchableOpacity>}                               
-
-                      <View style={styles.divider} />
+                      <View style={styles.divider} />   
 
                       <View style={styles.menuContainer}>
                         
@@ -279,6 +264,27 @@ return (
                         </TouchableOpacity>
                       </View>                       
 
+                      <View style={styles.divider} />                                                             
+                      
+                      <TouchableOpacity style={styles.menuItem} onPress={handleGoToProfile}>
+                        <User color="#475569" size={20} />
+                        <Text style={styles.menuItemText}>Perfil do Usuário</Text>
+                      </TouchableOpacity>
+
+                      <View style={styles.divider} />                        
+
+                      {tipoUsuario === 'Admin' && <TouchableOpacity style={styles.menuItem} onPress={handleListProfessor}>
+                        <UsersIcon color="#475569" size={20} />
+                        <Text style={styles.menuItemText}>Lista de Professores</Text>
+                      </TouchableOpacity>}
+
+                      <View style={styles.divider} />                        
+
+                      {tipoUsuario === 'Admin' && <TouchableOpacity style={styles.menuItem} onPress={handleListEstudante}>
+                        <UsersIcon color="#475569" size={20} />
+                        <Text style={styles.menuItemText}>Lista de Alunos</Text>
+                      </TouchableOpacity>}                               
+
                       <View style={styles.divider} />
 
                       <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
@@ -294,10 +300,11 @@ return (
             )         
           }} 
         />
+      
         <View style={styles.searchPanel}>
           
           {/* Select de Categoria */}
-          <View style={styles.pickerWrapper}>
+          {filterVisible && <View style={styles.pickerWrapper}>
             <BookOpen color={BLUE_500} size={18} style={styles.icon} />
             <Picker
               selectedValue={selectedCategoria}
@@ -309,10 +316,10 @@ return (
                 <Picker.Item key={cat} label={cat} value={cat} color="#1e293b" />
               ))}
             </Picker>
-          </View>
+          </View>}
 
           {/* Input Conteúdo */}
-          <View style={styles.inputWrapper}>
+          {filterVisible && <View style={styles.inputWrapper}>
             <Filter color={BLUE_500} size={18} style={styles.searchIcon} />
             <TextInput
               style={styles.input}
@@ -326,12 +333,22 @@ return (
                 <X color="#94a3b8" size={18} />
               </TouchableOpacity>
             )}
-          </View>
+          </View>}
           {/* Botão de Filtrar */}
-          <TouchableOpacity style={styles.filterButton} onPress={handleFilter}>
+          {filterVisible && <TouchableOpacity style={styles.filterButton} onPress={handleFilter}>
             <Filter color={WHITE} size={20} style={{ marginRight: 8 }} />
             <Text style={styles.filterButtonText}>APLICAR FILTROS</Text>
-          </TouchableOpacity>
+          </TouchableOpacity>}
+
+          {/* Ícone de Seta que vira 180 graus dinamicamente */}
+          {!filterVisible &&<TouchableOpacity style={styles.togglePanelButton} onPress={() => setFilterVisible(!filterVisible)}>
+          <View style={styles.togglePanelContent}>
+            <Filter color={BLUE_500} size={18} style={{ marginRight: 8 }} />
+            <Text style={styles.togglePanelText}>
+              {filterVisible ? "Esconder Filtros de Busca" : "Mostrar Filtros de Busca"}
+            </Text>
+          </View>
+          </TouchableOpacity>}
         </View>
 
         {loading ? (
@@ -614,4 +631,22 @@ checkboxContainer: {
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },  
+  togglePanelButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+  },
+  togglePanelContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  togglePanelText: {
+    color: '#3b82f6',
+    fontSize: 15,
+    fontWeight: '600',
+  }
 });
