@@ -11,9 +11,8 @@ import {
   StatusBar
 } from 'react-native';
 import { Eye, EyeOff, User, Lock } from 'lucide-react-native';
-import axios, { AxiosError } from 'axios';
 import { useFocusEffect, useRouter } from 'expo-router'; // Use este hook!
-import { RootStackParamList } from './types/types';
+import { dataService } from './service';
 
 const BLUE_900 = '#3b82f6';
 const WHITE = '#ffffff';
@@ -34,20 +33,17 @@ const LoginScreen = () => {
   );
 
   const handleLogin = async () => {
-    let Uri = 'http://192.168.15.106:3000/users/loginUsuario';
-    const dadosLogin = { username: email, password: password };
-
     try {
-      const response = await axios.post(Uri, dadosLogin);
+      const data = await dataService.login(email, password);
 
-      if (response.status === 200 || response.status === 201) {
+      if (data) {
         // ✅ Navegação no Expo Router com parâmetros
         router.push({
           pathname: "/", // ou apenas "/", já que index é a rota raiz
           params: { 
-            id: response.data.id, 
-            nome: response.data.name,
-            tipoUsuario: String(response.data.role) // O Expo Router prefere strings nos params
+            id: data.id, 
+            nome: data.name,
+            tipoUsuario: String(data.role) // O Expo Router prefere strings nos params
           }
         });
       }

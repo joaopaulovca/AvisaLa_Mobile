@@ -1,5 +1,4 @@
 import { Picker } from '@react-native-picker/picker';
-import axios from 'axios';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { 
@@ -13,6 +12,11 @@ import {
   ScrollView,
   SafeAreaView 
 } from 'react-native';
+import { UserType } from './types/User';
+import { dataService } from './service';
+import { Eye, EyeOff } from 'lucide-react-native';
+
+const BLUE_900 = '#3b82f6';
 
 const UsuarioScreen = () => {
 
@@ -26,6 +30,7 @@ const UsuarioScreen = () => {
   const [role, setRole] = useState('');
   const [roleUsuarioLogado, setRoleUsuarioLogado] = useState('');
   const [idUsuarioLogado, setIdUsuarioLogado] = useState(''); 
+  const [secureText, setSecureText] = useState(true);
 
   const params = useLocalSearchParams();
 
@@ -52,10 +57,8 @@ const UsuarioScreen = () => {
       return;
     }
 
-    let Uri = `http://192.168.15.106:3000/users/`;
-    let response: Response;
-
-    const formData = {        
+    const formData: UserType = {  
+      id: id,      
       name: nome,
       username: login,
       password: senha,
@@ -66,13 +69,8 @@ const UsuarioScreen = () => {
           : role ? role : 'Estudante'
     }
 
-    if (!id || (id === '')) {        
-      response = await axios.post(Uri, formData);
-    } else {
-      response = await axios.put(Uri + id, formData);
-    }
-
-    if ((response.status === 200) || (response.status === 201)) {
+    const data = await dataService.gravarUsuario(formData);
+    if (data) {
       setNome('');
       setLogin('');
       setSenha('');
@@ -80,11 +78,22 @@ const UsuarioScreen = () => {
       setTelefone('');
       setRole('');
       setEmail('');
-      if (!id || (id === '')) 
+      if (!id || (id === '')) {
         alert('Cadastro realizado com sucesso !');
-      else  
+        router.back();
+      } else { 
         alert('Cadastro atualizado com sucesso !'); 
-      router.back();     
+        if (id === idUsuarioLogado) {
+            router.replace({
+                pathname: '/',
+                params: { 
+                    id: data.id, 
+                    nome: data.name,
+                    tipoUsuario: String(data.role)
+                }
+            });
+        }
+      }    
     }
 
   };
@@ -92,20 +101,18 @@ const UsuarioScreen = () => {
   const fetchData = async () => {
     if (id) {
 
-      let Uri = 'http://192.168.15.106:3000/users/' + id;
-
       try {
 
-        const response = await axios.get(Uri);
+        const data = await dataService.buscarPerfil(id);
 
-        if (response.status === 200 || response.status === 201) {
-          setNome(response.data.name);
-          setLogin(response.data.username);
-          setSenha(response.data.password);
-          setDataNasc(response.data.data_nascimento);
-          setTelefone(response.data.mobile_phone);
-          setRole(response.data.role);
-          setEmail(response.data.email);
+        if (data) {
+          setNome(data.name);
+          setLogin(data.username);
+          setSenha(data.password);
+          setDataNasc(data.data_nascimento);
+          setTelefone(data.mobile_phone);
+          setRole(data.role);
+          setEmail(data.email);
         }
 
       } catch (error) {
@@ -160,13 +167,22 @@ const UsuarioScreen = () => {
             />
 
             <Text style={styles.label}>Senha</Text>
-            <TextInput 
-              style={styles.input} 
-              placeholder="Sua senha" 
-              secureTextEntry={true}
-              value={senha}
-              onChangeText={setSenha}
-            />
+            <View style={styles.inputContainer}>
+                <TextInput 
+                    style={styles.inputSenha} 
+                    placeholder="Sua senha" 
+                    secureTextEntry={secureText}
+                    value={senha}
+                    onChangeText={setSenha}
+                />
+                <TouchableOpacity onPress={() => setSecureText(!secureText)}>
+                {secureText ? (
+                    <EyeOff color="#94a3b8" size={20} />
+                ) : (
+                    <Eye color="#94a3b8" size={20} />
+                )}
+                </TouchableOpacity>
+            </View>
 
             <Text style={styles.label}>Número de Telefone</Text>
             <TextInput 
@@ -287,7 +303,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 10,
     minHeight: 55,
-  }
+  },
+  inputSenha: {
+    flex: 1,
+    fontSize: 16,
+  },
 });
 
 export default UsuarioScreen;

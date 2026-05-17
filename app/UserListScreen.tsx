@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -9,10 +9,10 @@ import {
   ActivityIndicator,
   SafeAreaView 
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pencil, Trash2, UserPlus, User as UserIcon } from 'lucide-react-native';
-import axios from 'axios';
 import { UserType } from './types/User';
+import { dataService } from './service';
 
 const BLUE_500 = '#3b82f6';
 const WHITE = '#ffffff';
@@ -28,10 +28,16 @@ const UserListScreen = () => {
     fetchUsers();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchUsers();  
+    }, [])
+  );  
+
   const fetchUsers = async () => {
     try {
-      const response = await axios.post('http://192.168.15.106:3000/users/filterUsuariosPorTipo', {role: tipo});
-      setUsers(response.data);
+      const data = await dataService.getUsers(String(tipo));
+      setUsers(data);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
     } finally {
@@ -57,7 +63,7 @@ const UserListScreen = () => {
           style: "destructive", 
           onPress: async () => {
             try {
-              await axios.delete(`http://192.168.15.106:3000/users/${id}`);
+              dataService.excluirUser(id);
               setUsers(users.filter(u => u.id !== id));
             } catch (error) {
               Alert.alert("Erro", "Não foi possível excluir.");
@@ -101,7 +107,7 @@ const UserListScreen = () => {
   const handleNovoUsuario = () => {
     router.push({
       pathname: '/UsuarioScreen', // ou apenas "/", já que index é a rota raiz
-      params: { roleUsuarioLogado: roleUsuarioLogado, idUsuarioLogado: idUsuarioLogado, id: '' }
+      params: { roleUsuarioLogado: roleUsuarioLogado, idUsuarioLogado: idUsuarioLogado, id: '', role: tipo }
     });    
   }
 

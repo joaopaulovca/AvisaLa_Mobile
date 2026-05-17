@@ -12,9 +12,10 @@ import {
   Platform
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { Save, Trash2, ArrowLeft, BookOpen, Type, AlignLeft } from 'lucide-react-native';
-import axios from 'axios';
+import { Save, Trash2, BookOpen, Type, AlignLeft } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router/build/hooks';
+import { dataService } from './service';
+import { Post } from './types/Post';
 
 const BLUE_500 = '#3b82f6';
 const WHITE = '#ffffff';
@@ -50,26 +51,15 @@ const CadastroScreen = () => {
       return;
     }
 
-    let Uri = `http://192.168.15.106:3000/posts/`;
-    let response: Response;
-
-    if (!params.id || (params.id === '')) {
-      response = await axios.post(Uri, {
-        user_id: userId,
-        category: category,
-        topic: topic,
-        description: description        
-      });
-    } else { 
-      response = await axios.put(Uri + id, {
-        user_id: userId,
-        category: category,
-        topic: topic,
-        description: description        
-      });
+    const post: Post = {
+      id: String(params.id),
+      user_id: userId,
+      category: category,
+      topic: topic,
+      description: description 
     }
 
-    if ((response.status === 200) || (response.status === 201)) {
+    if (await dataService.gravarPost(post)) {
       setUserId('');
       setId('');
       setCategory('');
@@ -94,15 +84,9 @@ const CadastroScreen = () => {
   };
 
   const excluir = async () => {
-
-    let Uri = `http://192.168.15.106:3000/posts/` + id;
-
-    const response = await axios.delete(Uri);
-
-    if (response.status === 200) {
-        router.back();
+    if (await dataService.excluirPost(id)) {
+      router.back();
     }
-
   };
 
   return (

@@ -15,12 +15,11 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { Post } from './types/Post';
-import { BookOpen, ChevronDown, Filter, LogOut, MenuIcon, Pencil, Plus, Search, User, UsersIcon, X } from 'lucide-react-native';
+import { BookOpen, Filter, LogOut, MenuIcon, Pencil, Plus, User, UsersIcon, X } from 'lucide-react-native';
 import { Picker } from '@react-native-picker/picker';
-import { RootStackParamList } from './types/types';
-import { RouteProp, useRoute } from '@react-navigation/native';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { Menu, Divider, Provider } from 'react-native-paper';
+import { Provider } from 'react-native-paper';
+import { dataService } from './service';
 
 const BLUE_500 = '#3b82f6';
 const WHITE = '#ffffff';
@@ -88,7 +87,6 @@ export default function index() {
         item.description.toLowerCase().includes(searchConteudo.toLowerCase())
       );
     });
-    //setFilteredData(filtered);
   }, [selectedCategoria, searchConteudo, originalData]);
 
   useFocusEffect(
@@ -99,8 +97,7 @@ export default function index() {
 
   const fetchData = async () => {
     try {
-      // Substitua pela sua URL real
-      const response = await axios.get<Post[]>('http://192.168.15.106:3000/posts');
+      const response = await dataService.getPosts();
       setData(response.data);
       setFilteredData(response.data)
     } catch (error) {
@@ -113,27 +110,11 @@ export default function index() {
   // Função disparada apenas ao clicar no botão
   const handleFilter = async () => {
     Keyboard.dismiss(); // Fecha o teclado
-    
-    let Uri = '';
-    switch (selectedCategoria) {
-      case 'Todas as Disciplinas':
-        Uri = 'http://192.168.15.106:3000/posts';
-        break;
-
-      default:
-        Uri = `http://192.168.15.106:3000/posts/category/${selectedCategoria}`;
-        break;
-    };
-
-    if (searchConteudo.length > 1) {
-      Uri += `/topic/${searchConteudo}/description/${searchConteudo}`;                       
-    };
 
     try {
-      console.log('uri', Uri)
-      const response = await axios.get<Post[]>(Uri); 
-      setData(response.data);
-      setFilteredData(response.data);  // Atualiza state do componente pagePai
+      const data = await dataService.filterPosts(selectedCategoria, searchConteudo); 
+      setData(data);
+      setFilteredData(data);
     } catch (err) {
       if (axios.isAxiosError(err)) {
 
@@ -145,7 +126,14 @@ export default function index() {
 
   const { id, nome, tipoUsuario } = useLocalSearchParams();
 
-  const [userName] = useState(nome); // Nome que viria do login
+  useEffect(() => {
+    // Se um novo nome chegar via parâmetros, atualiza o estado da Home
+    if (nome) {
+      setUserName(nome);
+    }
+  }, [id, nome, tipoUsuario]);
+
+  const [userName, setUserName] = useState(nome); // Nome que viria do login
   const [menuVisible, setMenuVisible] = useState(false);  
 
   // Componente que renderiza cada linha da lista
