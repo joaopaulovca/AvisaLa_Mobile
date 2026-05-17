@@ -7,10 +7,11 @@ import {
   TouchableOpacity, 
   Alert, 
   ActivityIndicator,
-  SafeAreaView 
+  SafeAreaView, 
+  TextInput
 } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { Pencil, Trash2, UserPlus, User as UserIcon } from 'lucide-react-native';
+import { Pencil, Trash2, UserPlus, User as UserIcon, Search } from 'lucide-react-native';
 import { UserType } from './types/User';
 import { dataService } from './service';
 
@@ -21,8 +22,8 @@ const UserListScreen = () => {
   const router = useRouter();
   const [users, setUsers] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const { tipo, idUsuarioLogado, roleUsuarioLogado } = useLocalSearchParams();
+  const {tipo, idUsuarioLogado, roleUsuarioLogado} = useLocalSearchParams();
+  const [searchText, setSearchText] = useState('');  
 
   useEffect(() => {
     fetchUsers();
@@ -74,6 +75,14 @@ const UserListScreen = () => {
     );
   };
 
+  const filteredUsers = users.filter(user => {
+    const nome = user.name ? user.name.toLowerCase() : '';
+    const email = user.email ? user.email.toLowerCase() : '';
+    const busca = searchText.toLowerCase();
+    
+    return nome.includes(busca) || email.includes(busca);
+  });  
+
   const renderItem = ({ item }: { item: UserType }) => (
     <View style={styles.card}>
       <View style={styles.userInfo}>
@@ -123,11 +132,23 @@ const UserListScreen = () => {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.searchContainer}>
+        <Search color="#94a3b8" size={20} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar por nome ou e-mail..."
+          placeholderTextColor="#94a3b8"
+          value={searchText}
+          onChangeText={setSearchText}
+          autoCorrect={false}
+        />
+      </View>      
+
       {loading ? (
         <ActivityIndicator size="large" color={BLUE_500} style={{ marginTop: 50 }} />
       ) : (
         <FlatList
-          data={users}
+          data={filteredUsers}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
@@ -241,6 +262,26 @@ const styles = StyleSheet.create({
     marginTop: 50,
     color: '#94a3b8',
   },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: WHITE,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 45,
+    fontSize: 16,
+    color: '#1e293b',
+  },  
 });
 
 export default UserListScreen;

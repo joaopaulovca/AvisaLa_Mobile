@@ -3,7 +3,7 @@ import { Post } from './types/Post';
 import { UserType } from './types/User';
 
 const api = axios.create({
-  baseURL: 'http://10.249.32.120:3000/',
+  baseURL: process.env.EXPO_PUBLIC_API_URL,
   timeout: 10000, // Tempo limite de 10 segundos por requisição
   headers: {
     'Content-Type': 'application/json',
